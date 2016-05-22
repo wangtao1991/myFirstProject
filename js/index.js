@@ -1,329 +1,111 @@
+/**
+ * Created by Administrator on 2016/5/19.
+ */
+var main = document.querySelector(".main");
+var inners = document.querySelectorAll(".pos");
+var winW = document.documentElement.clientWidth;
+var winH = document.documentElement.clientHeight;
+var back=document.querySelectorAll(".return");
+var desW = 640;
+var desH = 1080;
 
-var top_banner=document.getElementById("top_banner");
-var big_top_banner=document.getElementById("big_top_banner");
-var small_top_banner=document.getElementById("small_top_banner");
-var top_banner_btn=document.getElementById("top_banner_btn");
+if (winW / winH <= desW / desH) {
+    main.style.webkitTransform = "scale(" + winH / desH + ")";
+} else {
+    main.style.webkitTransform = "scale(" + winW / desW + ")";
+}
+
+[].forEach.call(inners, function () {
+   var curInner=arguments[0];
+    curInner.index=arguments[1];
+    curInner.addEventListener("touchstart",start);
+    curInner.addEventListener("touchmove",move);
+    curInner.addEventListener("touchend",end);
+});
 
 
-window.setTimeout(function () {
-    big_top_banner.style.display="block";
-    top_banner_btn.style.display="block";
-    myMove(big_top_banner,{height:300},300);
-},1000);
+function start(e){
+    this.startY= e.changedTouches[0].pageY;
+
+}
+
+function move(e){
+    this.flag=true;
+    e.preventDefault();
+    var movedY=e.changedTouches[0].pageY;
+    var changedX=movedY-this.startY;
+    var index=this.index;
 
 
-window.setTimeout(function () {
-    myMove(big_top_banner,{height:0},200, function () {
-        big_top_banner.style.display="none";
+    [].forEach.call(inners, function () {
+       if(arguments[1]!=index){
+           arguments[0].style.display="none";
+
+       }
+        arguments[0].firstElementChild.style.display="none";
+        arguments[0].firstElementChild.id="";
+        utils.removeClass(arguments[0],"zIndex");
     });
-    small_top_banner.style.display="block";
-    myMove(small_top_banner,{height:60},200);
-},5000);
 
-top_banner_btn.onclick= function () {
-
-
-
-};
-
-
-
-
-
-
-
-
-~function () {
-    var banner = document.getElementById("main_banner");
-    var bannerInner = banner.getElementsByTagName("div")[0];
-    var bannerTip = banner.getElementsByTagName("ul")[0];
-    var imgs = banner.getElementsByTagName("img");
-    var oli = banner.getElementsByTagName("li");
-    var link = banner.getElementsByTagName("a");
-    var leftLink = link[0];
-    var rightLink = link[1];
-
-
-//1.获取数据和绑定数据
-    var jsonData = null;
-    var xhr = new XMLHttpRequest();
-    xhr.open("get", "json/banner1.txt?_=" + Math.random(), false);
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && /^2\d{2}$/.test(xhr.status)) {
-        }
-        jsonData = utils.formatJSON(xhr.responseText);
-    };
-    xhr.send(null);
-    ~function () {
-        var str1 = "", str2 = "";
-        for (var i = 0, len = jsonData.length; i < len; i++) {
-            var cur = jsonData[i];
-            str1 += "<div><img src='' truesrc='" + cur['img'] + "'/></div>";
-            str2 += i === 0 ? "<li class='bg'></li>" : "<li></li>";
-        }
-        bannerInner.innerHTML = str1;
-        bannerTip.innerHTML = str2;
-    }();
-
-//2.延迟加载
-    window.setTimeout(lazyImg, 1000);
-    function lazyImg() {
-        for (var i = 0; i < imgs.length; i++) {
-            ~function (i) {
-                var curImg = imgs[i];
-                var newImg = new Image;
-                newImg.src = curImg.getAttribute("truesrc");
-                newImg.onload = function () {
-                    curImg.src = this.src;
-                    curImg.style.display = "block";
-                    if (i === 0) {
-                        curDiv = curImg.parentNode;
-                        //myMove(curDiv, {opacity: 1}, 500);
-                        curDiv.style.opacity = 1;
-                    }
-                    newImg = null;
-                }
-            }(i);
-        }
+    if(changedX>0){//向下滑
+        this.nextIndex=index==0?inners.length-1:index-1;
+        var duration=-winH+changedX;
     }
-
-//3.实现自动轮播
-    var step = 0, interval = 3000, autoTimer = null;
-    autoTimer = window.setInterval(autoMove, interval);
-    function autoMove() {
-        if (step === jsonData.length - 1) {
-            step = -1;
-        }
-        step++;
-        setBanner();
+    else if(changedX<0){//向上滑
+        this.nextIndex=index==inners.length-1?0:index+1;
+        duration=winH+changedX;
     }
+    //console.log(this.nextIndex)
+    inners[this.nextIndex].style.display="block";
 
-    function setBanner() {
-        for (var i = 0; i < imgs.length; i++) {
-            var curDiv = imgs[i].parentNode;
-            if (i === step) {
-                curDiv.style.zIndex = 1;
-                //myMove(curDiv, {opacity: 1}, 500);
-                curDiv.style.opacity = 1;
-            }
-            else {
-                curDiv.style.zIndex = 0;
-                //myMove(curDiv, {opacity: 0}, 500);
-                curDiv.style.opacity = 0;
-            }
-            i != step ? oli[i].style.background = "grey" : oli[i].style.background = "red";
-        }
-    }
-
-    for (var i = 0; i < oli.length; i++) {
-        var curLi = oli[i];
-        curLi.index = i;
-        curLi.onmouseover = function () {
-            step = this.index;
-            setBanner();
-        }
-    }
-    banner.onmouseover = function () {
-        clearInterval(autoTimer);
-        rightLink.style.display = leftLink.style.display = "block";
-    };
-    banner.onmouseout = function () {
-        autoTimer = window.setInterval(autoMove, interval);
-        rightLink.style.display = leftLink.style.display = "none";
-    };
-    rightLink.onclick = autoMove;
-    leftLink.onclick = function () {
-        step = step === 0 ? jsonData.length : step;
-        step--;
-        setBanner();
-    }
-}();
+    utils.addClass(inners[this.nextIndex],"zIndex");
+    inners[this.nextIndex].style.webkitTransform = "translate(0,"+duration+"px)";
+    inners[index].style.webkitTransform="scale("+(1-Math.abs(changedX)/winH*1/2)+") translate(0,"+changedX+"px)";
+}
 
 
-//每楼层区的轮播图功能实现
-var floor_banner1 = new BannerL("firstBanner", 1, 5000);
-var floor_banner2 = new BannerL("secBanner", 0, 4000);
-var floor_banner3 = new BannerL("thiBanner", 1, 6000);
-var floor_banner4 = new BannerL("forBanner", 0, 4000);
-var floor_banner5 = new BannerL("fifBanner", 1, 5000);
+function end(e){
+    if(this.flag){
+        inners[this.nextIndex].style.webkitTransform="translate(0,0)";
+        inners[this.nextIndex].style.webkitTranslation="0.5s";
+        inners[this.nextIndex].firstElementChild.style.display="block";
+        inners[this.nextIndex].firstElementChild.id="content-box"+this.nextIndex;
 
+        inners[this.nextIndex].addEventListener("webkitTransitionEnd", function () {
+            this.style.webkitTranslation="";
+            this.firstElementChild.style.display="block";
+            this.firstElementChild.id="content-box"+this.index;
 
-//楼层导航功能实现
-var winH = utils.win("clientHeight");
-var floorLift = document.getElementById("floor_lift");
-var floorArea = utils.getElementsByClass("floors");
-var floorLi = floorLift.getElementsByTagName("li");
-var hd_header_nav=document.getElementById("hd_header_nav");
-var goodsMenu_outerBox=document.getElementById("goodsMenu_outerBox");
-var hd_header_nav_bg=document.getElementById("hd_header_nav_bg");
-
-
-
-
-function winonscroll() {
-    var a = utils.offset(floorArea[0]).top;
-    var b = utils.win("scrollTop") + 150;
-    var len = floorArea.length;
-    floorLift.style.display = a < b ? "block" : "none";
-    var curscrol = utils.win("scrollTop");
-    if(curscrol>600){
-        hd_header_nav_bg.style.display="block";
-        utils.addClass(hd_header_nav,"nav_fixed");
-    }
-    else{
-        hd_header_nav_bg.style.display="none";
-        utils.removeClass(hd_header_nav,"nav_fixed");
-    }
-    
-    for (var i = 0; i < len; i++) {
-        var curFloor = floorArea[i];
-        var n = utils.offset(curFloor).top;
-        var c = utils.offset(floorArea[len - 1]).top;
-        if ((n - 150) < curscrol && curscrol < (n + 264)) {
-            utils.addClass(floorLi[i], "hover");
-            utils.removeClass(floorLi[len], "hover");
-        }
-        else {
-            if (curscrol >= (c + 264)) {
-                utils.addClass(floorLi[len], "hover");
-                utils.removeClass(floorLi[i], "hover");
-            }
-            utils.removeClass(floorLi[i], "hover");
-        }
+        });
+        this.flag=false;
     }
 }
 
-window.onscroll = winonscroll;
 
-goodsMenu_outerBox.onmouseover= function () {
-    utils.addClass(this,"hover");
-};
-goodsMenu_outerBox.onmouseout= function () {
-    utils.removeClass(this,"hover");
-};
- 
 
 ~function () {
-    for (var i = 0, len = floorArea.length; i <= len; i++) {
-        var curLi = floorLi[i];
-        curLi.onclick = (function (i) {
-            return function () {
-                var curscrol = utils.win("scrollTop");
-                if (i === floorLi.length - 1) {
-                    target = 0;
-                    step = (curscrol - target) / 600 * 10;
-                    timer = setInterval(
-                        function () {
-                            nowscrol = utils.win("scrollTop");
-                            if (nowscrol <= target) {
-                                clearInterval(timer);
-                                utils.win("scrollTop", target);
-                                return;
-                            }
-                            utils.win("scrollTop", nowscrol - step);
-                        }, 10);
-                    return;
-                }
-                var target = utils.offset(floorArea[i]).top - 145;
-                var step = (Math.abs(target - curscrol) / 600) * 10;
-                var timer = setInterval(function () {
-                    var nowscrol = utils.win("scrollTop");
-                    if (target < curscrol) {
-                        if (nowscrol <= target) {
-                            clearInterval(timer);
-                            utils.win("scrollTop", target);
-                            return;
-                        }
-                        utils.win("scrollTop", nowscrol - step);
-                    }
-                    else {
-                        if (nowscrol >= target) {
-                            clearInterval(timer);
-                            utils.win("scrollTop", target);
-                            return;
-                        }
-                        utils.win("scrollTop", nowscrol + step);
-                    }
-                }, 10);
-            }
-        })(i);
-    }
-}();
+    var music = document.getElementById("music"), audioFir = document.getElementById("audioFir");
+    window.setTimeout(function () {
+        audioFir.play();
 
+        audioFir.addEventListener("canplay", function () {
+            music.style.display = "block";
+            music.className = "music musicMove";
+        });
+    }, 500);
 
-//导航信息的隐藏与显示
-
-~function () {
-    var leftMenu=document.getElementById("left_menu");
-    var menuList = utils.getElementsByClass("menu_list");
-    var detailList = utils.getElementsByClass("menu_list_detail");
-
-    for (var i = 0; i < menuList.length; i++) {
-
-        var curLi=menuList[i];
-        curLi.index=i;
-        curLi.onmouseover=function(e){
-            this.className="cur";
-            detailList[this.index].style.display='block';
-            utils.css(detailList[this.index],{top:-(this.index*33)})
-
-        };
-
-        curLi.onmouseout= function (e) {
-            this.className="";
-            detailList[this.index].style.display='none';
+    music.addEventListener("click", function () {
+        //->暂停
+        if (audioFir.paused) {
+            audioFir.play();
+            music.className = "music musicMove";
+            return;
         }
-    }
+        //->播放
+        audioFir.pause();
+        music.className = "music";
+    });
 }();
-
-
-//图片移动效果
-~function () {
-    var smallImg=utils.getElementsByClass("floor_top_img");
-
-    for(var i=0;i<smallImg.length;i++){
-        var curImg=smallImg[i];
-        curImg.onmouseover= function () {
-            myMove(this,{right:-10},100)
-        };
-        curImg.onmouseout=function(){
-            myMove(this,{right:0},100)
-        }
-
-    }
-}();
-
-//图片阴影效果
-
- ~function () {
-     var floorArea=document.getElementById("floor_area");
-     floorArea.addEventListener("mouseover",function(e){
-         e=e||window.event;
-         var tar= e.target|| e.srcElement;
-         if(tar.tagName.toLowerCase()==="img"){
-             utils.addClass(tar,"light");
-
-         }else{
-             e.stopPropagation?e.stopPropagation(): e.cancelable=true;
-         }
-
-     },false);
-     floorArea.addEventListener("mouseout",function(e){
-         e=e||window.event;
-         var tar= e.target|| e.srcElement;
-         if(tar.tagName.toLowerCase()==="img"){
-             utils.removeClass(tar,"light");
-
-
-
-         }else{
-             e.stopPropagation?e.stopPropagation(): e.cancelable=true;
-         }
-     },false);
- }();
-
-
-
 
 
 

@@ -287,7 +287,7 @@ var utils = (function () {
     function css(curEle) {
         var argTwo = arguments[1], ary = Array.prototype.slice.call(arguments, 1);
         if (typeof argTwo === "string") {
-            if (typeof arguments[2] === "undefined") {
+            if (typeof arguments[2]==="undefined") {
                 return getCss.apply(curEle, ary);
             }
             setCss.apply(curEle, ary);
@@ -325,53 +325,3 @@ var utils = (function () {
         css: css
     }
 })();
-
-//->柯理化函数思想:一个JS预先处理的思想->利用函数执行可以形成一个不销毁的私有作用域的原理,把需要预先处理的内容都存在这个不销毁的作用域中,并且返回一个小函数,以后我们执行的都是小函数,在小函数中把之前预先存储的值进行相关的操作处理即可
-//myBind方法
-Function.prototype.myBind = function myBind(context) {
-    //this->fn
-    var _this = this;
-    var outerArg = Array.prototype.slice.call(arguments, 1);
-    //->兼容
-    if ("bind" in Function.prototype) {
-        return this.bind.apply(this, [context].concat(outerArg));
-    }
-    //->不兼容
-    return function () {
-        var innerArg = Array.prototype.slice.call(arguments, 0);
-        innerArg.length === 0 ? innerArg[innerArg.length] = window.event : null;
-        _this.apply(context, outerArg.concat(innerArg));
-    }
-};
-
-//检测数据类型（柯理化函数思想）
-(function () {
-    var numObj = {
-        isNum: "Number",
-        isStr: "String",
-        isBoo: "Boolean",
-        isNul: "Null",
-        isUnd: "Undefined",
-        isObj: "Object",
-        isAry: "Array",
-        isFun: "Function",
-        isReg: "RegExp",
-        isDate: "Date"
-    }, isType = function () {
-        var outerArg = arguments[0];
-        return function () {
-            var innerArg = arguments[0], reg = new RegExp("^\\[object " + outerArg + "\\]$", "i");
-            return reg.test(Object.prototype.toString.call(innerArg));
-        }
-    };
-    var toolType = {};
-    for (var key in numObj) {
-        if (numObj.hasOwnProperty(key)) {
-            toolType[key] = isType(numObj[key]);
-        }
-    }
-    window.$type = toolType;
-})();
-
-//console.log($type.isNum(1));
-//console.log($type.isAry(1));
